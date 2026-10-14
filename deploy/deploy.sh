@@ -3,6 +3,7 @@
 # Usage (from the repo on the server):  sudo EMAIL=you@example.com bash deploy/deploy.sh
 # Prereqs: DNS A/AAAA for $DOMAIN points at this machine, ports 80/443 open, Node 20+ and npm installed.
 # The app runs from this checkout as the user who owns it (override with APP_USER=...).
+# It first runs `git pull --ff-only` as the checkout owner (skip with SKIP_PULL=1).
 # Safe to re-run: it stops the existing pm2 process, rebuilds, starts it again and reuses the certificate.
 # Optional: put NVD_API_KEY=... in /etc/reconlite.env (chmod 600) for higher NVD rate limits.
 set -euo pipefail
@@ -25,6 +26,14 @@ command -v node >/dev/null || { echo "Node.js not found. Install Node 20+ first.
 
 # Run a command as the app user with the current PATH (so node/npm/pm2 are found under sudo).
 as_app() { sudo -u "$APP_USER" -H env "PATH=$PATH" "$@"; }
+
+# Update the checkout first. Re-exec afterwards so bash runs the freshly pulled script, not a half-read old one.
+if [ -z "${DEPLOY_PULLED:-}" ] && [ -z "${SKIP_PULL:-}" ] && [ -d "$REPO/.git" ]; then
+  echo "[0/6] git pull in $REPO as $APP_USER"
+  as_app git -C "$REPO" pull --ff-only
+  export DEPLOY_PULLED=1
+  exec bash "$HERE/deploy.sh" "$@"
+fi
 
 echo "[1/6] installing nginx, certbot and pm2"
 apt-get update -y
