@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Recon Suite — Passive Website Security Inspector
 
-## Getting Started
-
-First, run the development server:
+A Kali-style terminal in the browser that runs **passive** security checks against a domain.
+**No payloads sent — inspection only.** Every check reads what a server, DNS zone or page already discloses.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Optional: `NVD_API_KEY=<key>` raises the NVD rate limit from 5 to 50 requests / 30 s.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Commands
+`scan <domain>` · `modules` · `report` (`report pdf`) · `clear` · `help` — ↑/↓ history, Tab completion, Ctrl+C aborts a scan.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Architecture
+- `app/api/scan/route.ts` — POST, streams Server-Sent Events as each module finishes. All checks run server-side.
+- `lib/modules/*` — one isolated function per check, each returning `{ id, severity, title, detail, fix }[]`.
+- `lib/net.ts` — every outbound connection resolves through `safeLookup`, which refuses private/loopback/link-local
+  addresses at connect time (SSRF and DNS-rebinding guard). Only HTTPS/443, bodies capped, timeouts everywhere.
+- `lib/ratelimit.ts` — 5 scans / 10 min and 1 concurrent scan per IP (in-memory; swap for Redis/KV if scaled out).
+- The server rejects scans unless the authorization checkbox was confirmed.
+- `components/Terminal.tsx` — hidden `<input>` + styled text + separate blinking caret element.
 
-## Learn More
+## Modules
+headers · cookies · cors · tls · dns · tech · cve · sqlleak — see `CASE_STUDY.md`.
 
-To learn more about Next.js, take a look at the following resources:
+## Scope (will not be added)
+Active SQLi/XSS/command-injection testing, brute-force login or directory enumeration, or any request designed to break or exploit a target.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes
+- CVE matching is version-based and can produce false positives when fixes are backported without a version bump.
+- `x-forwarded-for` is trusted for rate limiting; deploy behind a proxy that sets it correctly.
