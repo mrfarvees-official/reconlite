@@ -10,7 +10,7 @@ set -euo pipefail
 
 DOMAIN="${DOMAIN:-recon.farvees.xyz}"
 EMAIL="${EMAIL:?set EMAIL=you@example.com (used for certificate expiry notices)}"
-PORT="${PORT:-3001}"
+PORT="${PORT:-3002}"
 APP_NAME="${APP_NAME:-reconlite}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(dirname "$HERE")"
