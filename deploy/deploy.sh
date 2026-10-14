@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Deploy Recon Suite on Ubuntu: pm2 app process + nginx + Let's Encrypt certificate.
-# Usage (from the repo on the server):  sudo EMAIL=you@example.com bash deploy/deploy.sh
+# Usage (from the repo on the server):  sudo bash deploy/deploy.sh
 # Prereqs: DNS A/AAAA for $DOMAIN points at this machine, ports 80/443 open, Node 20+ and npm installed.
 # The app runs from this checkout as the user who owns it (override with APP_USER=...).
 # It first runs `git pull --ff-only` as the checkout owner (skip with SKIP_PULL=1).
@@ -9,7 +9,6 @@
 set -euo pipefail
 
 DOMAIN="${DOMAIN:-recon.farvees.xyz}"
-EMAIL="${EMAIL:?set EMAIL=you@example.com (used for certificate expiry notices)}"
 PORT="${PORT:-3002}"
 APP_NAME="${APP_NAME:-reconlite}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -19,7 +18,7 @@ APP_USER="${APP_USER:-$(stat -c %U "$REPO")}"   # owner of the checkout runs bui
 APP_HOME="$(getent passwd "$APP_USER" | cut -d: -f6)"
 CONF_SRC="$HERE/$DOMAIN.conf"
 
-[ "$(id -u)" -eq 0 ] || { echo "run as root: sudo EMAIL=... bash deploy/deploy.sh"; exit 1; }
+[ "$(id -u)" -eq 0 ] || { echo "run as root: sudo bash deploy/deploy.sh"; exit 1; }
 [ -f "$CONF_SRC" ] || { echo "missing $CONF_SRC"; exit 1; }
 command -v node >/dev/null || { echo "Node.js not found. Install Node 20+ first."; exit 1; }
 [ "$APP_USER" != "root" ] || echo "note: running the app as root; consider APP_USER=<unprivileged user>"
@@ -73,7 +72,7 @@ EOF
   nginx -t
   systemctl enable --now nginx
   systemctl reload nginx
-  certbot certonly --nginx -d "$DOMAIN" --non-interactive --agree-tos -m "$EMAIL"
+  certbot certonly --nginx -d "$DOMAIN" --non-interactive --agree-tos --register-unsafely-without-email
 else
   echo "certificate already present, skipping"
 fi
