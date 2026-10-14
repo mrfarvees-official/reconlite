@@ -10,6 +10,9 @@ const jetbrains = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Recon Suite — Passive Website Security Inspector",
   description: "Terminal-style passive security inspection. No payloads sent — inspection only.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export const viewport: Viewport = {

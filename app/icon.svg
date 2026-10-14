@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title>Recon Suite</title>
+  <rect width="64" height="64" rx="14" fill="#050807"/>
+  <path d="M32 9 51 16v14c0 12.5-7.8 20.5-19 25-11.2-4.5-19-12.5-19-25V16L32 9Z" fill="#0b2418" stroke="#39ff88" stroke-width="3"/>
+  <path d="m22 27 7 6-7 6M34 40h9" fill="none" stroke="#b7ffd0" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+</svg>
